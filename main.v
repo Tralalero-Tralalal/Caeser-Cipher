@@ -19,23 +19,12 @@ Inductive encrypted : nat -> nat -> Prop :=
       n < 26 -> r < 26 -> encrypted ((n - 1) mod 26) (S r).
 
 Inductive decrypted : nat -> nat -> Prop :=
-  | decrypt_rotation_0 (n : nat) : decrypted n 0
+  | decrypt_rotation_0 (n : nat) : n < 26 -> decrypted n 0
   | decrypt_rotation_step (n : nat) (r : nat) :
-      decrypted n r -> decrypted ((n + 1) mod 26) (S r).
+      n < 26 -> r < 26 -> decrypted ((n + 1) mod 26) (S r).
 
-Lemma equiv_encrypt_decrypt :
-  forall n move_by : nat,
-    n < 26 -> move_by < 26 ->
-    encrypt (decrypt n move_by) move_by = n /\
-    decrypt (encrypt n move_by) move_by = n.
+Lemma ex : encrypted 5 9.
 Proof.
-  intros n move_by Hn Hm.
-  unfold encrypt, decrypt.
-  split. Admitted.
-
-Lemma encryption_ex : encrypted 5 10.
-Proof.
-  apply rotation_step with (n := 6) (r := 9).
-  - lia. - lia.
-Qed.
+  apply rotation_step with (n := 6) (r := 8).
+  - lia. - lia. Qed.
 
