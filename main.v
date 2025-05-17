@@ -14,17 +14,40 @@ Definition decrypt (c move_by : nat) : nat :=
   (c + (26 - move_by)) mod 26.
 
 Inductive encrypted : nat -> nat -> Prop :=
-  | encrypt_rotation_0 (n : nat) : n < 26 -> encrypted n 0
-  | rotation_step (n : nat) (r : nat) :
-      n < 26 -> r < 26 -> encrypted ((n - 1) mod 26) (S r).
+  | encrypt_0 (n : nat) : 
+      n < 26 -> encrypted n 0
+  | encrypt_else (n : nat) (r : nat) :
+      n < 26 -> r < 26 -> encrypted ((n + r) mod 26) 0 -> encrypted n r.
 
 Inductive decrypted : nat -> nat -> Prop :=
-  | decrypt_rotation_0 (n : nat) : n < 26 -> decrypted n 0
-  | decrypt_rotation_step (n : nat) (r : nat) :
-      n < 26 -> r < 26 -> decrypted ((n + 1) mod 26) (S r).
+  | decrypt_0 (n : nat) : 
+      n < 26 -> decrypted n 0
+  | decrypt_else (n : nat) (r : nat) :
+      n < 26 -> r < 26 -> decrypted ((n + (26 - r)) mod 26) 0 
+      -> decrypted n r.
 
-Lemma ex : encrypted 5 9.
+Example ex_encrypt : encrypted 5 9.
 Proof.
-  apply rotation_step with (n := 6) (r := 8).
-  - lia. - lia. Qed.
+  apply encrypt_else with (n := 5) (r := 9).
+  - lia. - lia. - simpl. apply encrypt_0. lia. Qed.
 
+Example ex_decrypt : decrypted 6 3.
+Proof. apply decrypt_else. - lia. - lia. - simpl. apply decrypt_0. lia. Qed.
+
+Theorem decrypt_correctness :
+  forall n m : nat, n < 26 -> m < 26 -> decrypted n m.
+Proof.
+  intros. apply decrypt_else. 
+  - apply H.
+  - apply H0.
+  - apply decrypt_0. apply Nat.mod_upper_bound. lia.
+Qed.
+
+Theorem encrypt_correctness :
+  forall n m : nat, n < 26 -> m < 26 -> encrypted n m.
+Proof.
+  intros. apply encrypt_else. 
+  - apply H.
+  - apply H0.
+  - apply encrypt_0. apply Nat.mod_upper_bound. lia.
+Qed.
