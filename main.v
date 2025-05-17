@@ -1,10 +1,5 @@
 From Coq Require Import Arith.
-From Coq Require Import Bool.
-From Coq Require Export Strings.String.
-From Coq Require Import FunctionalExtensionality.
-From Coq Require Import List.
 Require Import Lia.
-Import ListNotations.
 Set Default Goal Selector "!".
 
 Definition encrypt (n move_by : nat) : nat :=
@@ -17,22 +12,23 @@ Inductive encrypted : nat -> nat -> Prop :=
   | encrypt_0 (n : nat) : 
       n < 26 -> encrypted n 0
   | encrypt_else (n : nat) (r : nat) :
-      n < 26 -> r < 26 -> encrypted ((n + r) mod 26) 0 -> encrypted n r.
+      n < 26 -> r < 26 -> encrypted (encrypt n r) 0 -> encrypted n r.
 
 Inductive decrypted : nat -> nat -> Prop :=
   | decrypt_0 (n : nat) : 
       n < 26 -> decrypted n 0
   | decrypt_else (n : nat) (r : nat) :
-      n < 26 -> r < 26 -> decrypted ((n + (26 - r)) mod 26) 0 
+      n < 26 -> r < 26 -> decrypted (decrypt n r) 0 
       -> decrypted n r.
 
-Example ex_encrypt : encrypted 5 9.
+Example ex_encrypt : encrypted 20 9.
 Proof.
-  apply encrypt_else with (n := 5) (r := 9).
-  - lia. - lia. - simpl. apply encrypt_0. lia. Qed.
+  apply encrypt_else.
+  - lia. - lia. - simpl. apply encrypt_0. unfold encrypt. simpl. lia. Qed.
 
-Example ex_decrypt : decrypted 6 3.
-Proof. apply decrypt_else. - lia. - lia. - simpl. apply decrypt_0. lia. Qed.
+Example ex_decrypt : decrypted 20 18.
+Proof. apply decrypt_else. - lia. - lia. - simpl. apply decrypt_0. unfold decrypt.
+simpl. lia. Qed.
 
 Theorem decrypt_correctness :
   forall n m : nat, n < 26 -> m < 26 -> decrypted n m.
@@ -51,3 +47,24 @@ Proof.
   - apply H0.
   - apply encrypt_0. apply Nat.mod_upper_bound. lia.
 Qed.
+
+Theorem decrypt_inverts_encrypt :
+  forall n r,
+    n < 26 -> r < 26 -> decrypted (encrypt n r) r.
+Proof.
+  intros. apply decrypt_else.
+  - apply Nat.mod_upper_bound. lia.
+  - apply H0.
+  - apply decrypt_0. apply Nat.mod_upper_bound. lia.
+Qed.
+
+Theorem encrypt_inverts_decrypt :
+  forall n r,
+    n < 26 -> r < 26 -> encrypted (decrypt n r) r.
+Proof.
+  intros. apply encrypt_else.
+  - apply Nat.mod_upper_bound. lia.
+  - apply H0.
+  - apply encrypt_0. apply Nat.mod_upper_bound. lia.
+Qed.
+
