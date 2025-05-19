@@ -1,70 +1,23 @@
-From Coq Require Import Arith.
-Require Import Lia.
-Set Default Goal Selector "!".
+Require Import Coq.Arith.Arith.
+Require Import Coq.Arith.PeanoNat.
+Require Import Coq.micromega.Lia.
+Require Import Nat.
 
 Definition encrypt (n move_by : nat) : nat :=
-    (n + move_by) mod 26.
+  (n + move_by) mod 26.
 
 Definition decrypt (c move_by : nat) : nat :=
-  (c + (26 - move_by)) mod 26.
+  (c + (26 - (move_by mod 26))) mod 26.
 
-Inductive encrypted : nat -> nat -> Prop :=
-  | encrypt_0 (n : nat) : 
-      n < 26 -> encrypted n 0
-  | encrypt_else (n : nat) (r : nat) :
-      n < 26 -> r < 26 -> encrypted (encrypt n r) 0 -> encrypted n r.
+Compute( encrypt (decrypt 30 1000) 1000 =? 30 mod 26).
 
-Inductive decrypted : nat -> nat -> Prop :=
-  | decrypt_0 (n : nat) : 
-      n < 26 -> decrypted n 0
-  | decrypt_else (n : nat) (r : nat) :
-      n < 26 -> r < 26 -> decrypted (decrypt n r) 0 
-      -> decrypted n r.
-
-Example ex_encrypt : encrypted 20 9.
+Lemma encrypt_decrypt_inverse :
+  forall n m : nat, encrypt (decrypt n m) m = n mod 26.
 Proof.
-  apply encrypt_else.
-  - lia. - lia. - simpl. apply encrypt_0. unfold encrypt. simpl. lia. Qed.
-
-Example ex_decrypt : decrypted 20 18.
-Proof. apply decrypt_else. - lia. - lia. - simpl. apply decrypt_0. unfold decrypt.
-simpl. lia. Qed.
-
-Theorem decrypt_correctness :
-  forall n m : nat, n < 26 -> m < 26 -> decrypted n m.
-Proof.
-  intros. apply decrypt_else. 
-  - apply H.
-  - apply H0.
-  - apply decrypt_0. apply Nat.mod_upper_bound. lia.
+  intros. unfold encrypt, decrypt. rewrite Nat.Div0.add_mod_idemp_l. 
+  rewrite <- Nat.Div0.add_mod_idemp_r. rewrite <- Nat.add_assoc. Search (_ - ?n + ?n).
+  rewrite Nat.sub_add. 
+  - rewrite Nat.Div0.add_mod. rewrite Nat.Div0.mod_same.
+  rewrite Nat.add_0_r. rewrite Nat.Div0.mod_mod. reflexivity.
+  - Search(?a mod ?b <= ?b). apply Nat.Div0.mod_le.
 Qed.
-
-Theorem encrypt_correctness :
-  forall n m : nat, n < 26 -> m < 26 -> encrypted n m.
-Proof.
-  intros. apply encrypt_else. 
-  - apply H.
-  - apply H0.
-  - apply encrypt_0. apply Nat.mod_upper_bound. lia.
-Qed.
-
-Theorem decrypt_inverts_encrypt :
-  forall n r,
-    n < 26 -> r < 26 -> decrypted (encrypt n r) r.
-Proof.
-  intros. apply decrypt_else.
-  - apply Nat.mod_upper_bound. lia.
-  - apply H0.
-  - apply decrypt_0. apply Nat.mod_upper_bound. lia.
-Qed.
-
-Theorem encrypt_inverts_decrypt :
-  forall n r,
-    n < 26 -> r < 26 -> encrypted (decrypt n r) r.
-Proof.
-  intros. apply encrypt_else.
-  - apply Nat.mod_upper_bound. lia.
-  - apply H0.
-  - apply encrypt_0. apply Nat.mod_upper_bound. lia.
-Qed.
-
