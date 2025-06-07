@@ -3,3 +3,8 @@
 !main.ml
 main.native
 _build/
+*.vo
+*.vok
+.*.aux
+*.vos
+*.glob
