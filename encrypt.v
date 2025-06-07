@@ -37,3 +37,8 @@ Proof.
     rewrite add_0_r. reflexivity.  
   - apply lt_le_incl. apply mod_bound_pos. apply le_0_l. lia.
 Qed.
+
+Require Import ExtrOcamlBasic.
+Require Import ExtrOcamlString.
+
+Separate Extraction encrypt decrypt.
